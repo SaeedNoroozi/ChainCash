@@ -36,11 +36,11 @@ class TransferService:
 
         to_checksum = self.blockchain_client.web3.to_checksum_address(to_address)
         value_wei   = self.blockchain_client.web3.to_wei(amount, "ether")
-        nonce       = self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
+        nonce       = await self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
         balance_wei = await self.blockchain_client.web3.eth.get_balance(self.sender_account.address)
 
         if balance_wei < value_wei:
-            logger.error(f"Insufficient BNB balance for transfer: required {amount} BNB, available {self.client.web3.from_wei(balance_wei, 'ether')}")
+            logger.error(f"Insufficient BNB balance for transfer: required {amount} BNB, available {self.blockchain_client.web3.from_wei(balance_wei, 'ether')}")
             raise TransferError("Insufficient balance to send BNB.")
 
         tx = {
@@ -75,11 +75,11 @@ class TransferService:
             transfer_result (TransferResult): The result of the transfer.
         """
 
-        to_checksum = self.blockchain_client.web3.to_checksum_address(to_address)
-        value       = int(amount * 1e18)
-        nonce       = await self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
+        to_checksum      = self.blockchain_client.web3.to_checksum_address(to_address)
+        value            = int(amount * 1e18)
+        nonce            = await self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
         usdt_balance_raw = await self.usdt_contract.functions.balanceOf(self.sender_account.address).call()
-        usdt_balance = usdt_balance_raw / 1e18
+        usdt_balance     = usdt_balance_raw / 1e18
         
         if usdt_balance < amount:
             logger.error(f"Insufficient USDT balance for transfer: required {amount} USDT, available {usdt_balance}")
@@ -87,7 +87,7 @@ class TransferService:
         
         tx = self.usdt_contract.functions.transfer(to_checksum, value).build_transaction({
             "nonce"    : nonce,
-            "gasPrice" : await self.blockchain_client.web3.eth.gas_price,
+            "gasPrice" : self.blockchain_client.web3.eth.gas_price,
             "from"     : self.sender_account.address
         })
 

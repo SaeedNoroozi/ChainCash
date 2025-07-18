@@ -1,6 +1,8 @@
 from web3 import AsyncWeb3
 from web3.middleware import ExtraDataToPOAMiddleware
 from chaincash.core.config import settings
+from chaincash.utils.logger import logger
+from chaincash.utils.exceptions import BlockchainConnectionError
 
 class BlockchainClient:
     """
@@ -59,7 +61,10 @@ class BlockchainClient:
         """
 
         if not await self.web3.is_connected():
-            raise ValueError("Failed to connect to the blockchain.")
+            logger.error("Failed to connect to blockchain RPC.")
+            raise BlockchainConnectionError("Unable to connect to RPC node.")
+
+        logger.info("Connected to blockchain RPC.")
 
     async def get_bnb_balance(self, address: str) -> float:
         """

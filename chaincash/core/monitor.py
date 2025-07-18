@@ -2,6 +2,7 @@ from typing import Callable, Dict
 from chaincash.core.blockchain_client import BlockchainClient
 from chaincash.core.models import DepositEvent
 from chaincash.core.config import settings
+from chaincash.utils.logger import logger
 import asyncio
 
 class Monitor:
@@ -48,7 +49,7 @@ class Monitor:
             callback: function(DepositEvent)
         """
 
-        print("[Monitor] Stating monitoring process...")
+        logger.info("[Monitor] Stating monitoring process...")
         latest_block = await self.blockchain_client.web3.eth.block_number
         
         while True:
@@ -64,7 +65,7 @@ class Monitor:
                     amount_bnb = float(self.blockchain_client.web3.from_wei(tx["value"], "ether"))
                     tx_hash    = tx["hash"].hex()
 
-                    print(f"[Monitor] New transaction: {user_id} - {to_address} - {amount_bnb:.6f} BNB - {tx_hash}")
+                    logger.success(f"[Monitor] New transaction: {user_id} - {to_address} - {amount_bnb:.6f} BNB - {tx_hash}")
 
                     await callback(DepositEvent(
                         user_id = user_id,
@@ -84,7 +85,7 @@ class Monitor:
                                 amount_usdt = event["args"]["value"] / 1e18
                                 tx_hash     = tx["hash"].hex()
 
-                                print(f"[Monitor] New transaction: {user_id} - {to_addr} - {amount_usdt:.6f} USDT - {tx_hash}")
+                                logger.success(f"[Monitor] New transaction: {user_id} - {to_addr} - {amount_usdt:.6f} USDT - {tx_hash}")
 
                                 await callback(DepositEvent(
                                     user_id = user_id,
@@ -93,7 +94,7 @@ class Monitor:
                                     tx_hash = tx_hash
                                 ))
                         except Exception as e:
-                            print(f"[Monitor] Error processing log: {e}")
+                            logger.error(f"[Monitor] Error processing log: {e}")
                             continue
                         
 

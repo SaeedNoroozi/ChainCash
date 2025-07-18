@@ -1,5 +1,6 @@
 from web3 import AsyncWeb3
 from chaincash.core.models import Wallet
+from chaincash.utils.logger import logger
 
 class WalletManager:
     """
@@ -18,6 +19,7 @@ class WalletManager:
             Wallet: The generated wallet instance.
         """
         account = AsyncWeb3().eth.account.create()
+        logger.info(f"Created wallet for user {user_id} with address {account.address}")
         return Wallet(
                 user_id     = user_id,
                 address     = account.address,

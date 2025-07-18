@@ -1,6 +1,7 @@
 from chaincash.core.blockchain_client import BlockchainClient
 from chaincash.core.config import settings
 from chaincash.core.models import TransferResult
+from chaincash.utils.logger import logger
 
 class TransferService:
     """
@@ -62,6 +63,8 @@ class TransferService:
         signed_tx = self.sender_account.sign_transaction(tx)
         tx_hash   = await self.blockchain_client.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
+        logger.success(f"Sent {amount} BNB to {to_address} with transaction hash {tx_hash.hex()} successfully.")
+
         return TransferResult(
             to_address = to_address,
             token      = "BNB",
@@ -93,6 +96,8 @@ class TransferService:
 
         signed_tx = self.sender_account.sign_transaction(tx)
         tx_hash   = await self.blockchain_client.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+
+        logger.success(f"Sent {amount} USDT to {to_address} with transaction hash {tx_hash.hex()} successfully.")
 
         return TransferResult(
             to_address = to_address,

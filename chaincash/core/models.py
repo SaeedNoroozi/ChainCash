@@ -12,3 +12,10 @@ class DepositEvent:
     token  : str
     amount : float
     tx_hash: str
+
+@dataclass
+class TransferResult:
+    to_address: str
+    token     : str
+    amount    : float
+    tx_hash   : str

@@ -1,4 +1,5 @@
 from web3 import AsyncWeb3
+from web3.middleware import ExtraDataToPOAMiddleware
 from chaincash.core.config import settings
 
 class BlockchainClient:
@@ -33,7 +34,7 @@ class BlockchainClient:
             raise ValueError("RPC URL not provided.")
         
         self.web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.rpc_url))
-        
+        self.web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         self.USDT_CONTRACT = AsyncWeb3.to_checksum_address(settings.USDT_CONTRACT)
         self.USDT_ABI      = [
             {

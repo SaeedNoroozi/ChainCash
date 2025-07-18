@@ -23,22 +23,7 @@ class Monitor:
         self.poll_interval     = poll_interval
         self.blockchain_client = blockchain_client
         self.address_map       = {k: v.lower() for k, v in address_map.items()}
-        self.USDT_ABI          = [
-            {
-                "anonymous": False,
-                "inputs"   : [
-                    {"indexed": True, "internalType": "address", "name": "from", "type": "address"},
-                    {"indexed": True, "internalType": "address", "name": "to", "type": "address"},
-                    {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"}
-                ],
-                "name"     : "Transfer",
-                "type"     : "event"
-            }
-        ]
-        self.usdt_contract     = self.blockchain_client.web3.eth.contract(
-            address = self.blockchain_client.web3.to_checksum_address(settings.USDT_CONTRACT),
-            abi     = self.USDT_ABI
-        )
+        self.usdt_contract     = self.blockchain_client.usdt_contract
         self.usdt_address      = self.usdt_contract.address.lower()
 
     async def start(self, callback: Callable[[DepositEvent], None]) -> None:

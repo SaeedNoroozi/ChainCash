@@ -2,6 +2,7 @@ from chaincash.core.blockchain_client import BlockchainClient
 from chaincash.core.config import settings
 from chaincash.core.models import TransferResult
 from chaincash.utils.logger import logger
+from chaincash.utils.exceptions import TransferError
 
 class TransferService:
     """
@@ -19,22 +20,7 @@ class TransferService:
 
         self.blockchain_client = blockchain_client
         self.sender_account    = self.blockchain_client.web3.eth.account.from_key(sender_private_key)
-        self.USDT_ABI          = [
-            {
-                "constant": False,
-                "inputs"  : [
-                    {"name": "_to", "type": "address"},
-                    {"name": "_value", "type": "uint256"}
-                ],
-                "name"    : "transfer",
-                "outputs" : [{"name": "", "type": "bool"}],
-                "type"    : "function",
-            }
-        ]
-        self.usdt_contract     = self.blockchain_client.web3.eth.contract(
-            address = self.blockchain_client.web3.to_checksum_address(settings.USDT_CONTRACT),
-            abi     = self.USDT_ABI
-        )
+        self.usdt_contract     = self.blockchain_client.usdt_contract
     
     async def send_bnb(self, to_address: str, amount: float) -> TransferResult:
         """
@@ -51,6 +37,11 @@ class TransferService:
         to_checksum = self.blockchain_client.web3.to_checksum_address(to_address)
         value_wei   = self.blockchain_client.web3.to_wei(amount, "ether")
         nonce       = self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
+        balance_wei = await self.blockchain_client.web3.eth.get_balance(self.sender_account.address)
+
+        if balance_wei < value_wei:
+            logger.error(f"Insufficient BNB balance for transfer: required {amount} BNB, available {self.client.web3.from_wei(balance_wei, 'ether')}")
+            raise TransferError("Insufficient balance to send BNB.")
 
         tx = {
             "nonce"    : nonce,
@@ -87,7 +78,13 @@ class TransferService:
         to_checksum = self.blockchain_client.web3.to_checksum_address(to_address)
         value       = int(amount * 1e18)
         nonce       = await self.blockchain_client.web3.eth.get_transaction_count(self.sender_account.address)
-
+        usdt_balance_raw = await self.usdt_contract.functions.balanceOf(self.sender_account.address).call()
+        usdt_balance = usdt_balance_raw / 1e18
+        
+        if usdt_balance < amount:
+            logger.error(f"Insufficient USDT balance for transfer: required {amount} USDT, available {usdt_balance}")
+            raise TransferError("Insufficient balance to send USDT.")
+        
         tx = self.usdt_contract.functions.transfer(to_checksum, value).build_transaction({
             "nonce"    : nonce,
             "gasPrice" : await self.blockchain_client.web3.eth.gas_price,

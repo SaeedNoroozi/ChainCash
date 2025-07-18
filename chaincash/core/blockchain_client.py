@@ -38,15 +38,6 @@ class BlockchainClient:
         self.web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.rpc_url))
         self.web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         self.USDT_CONTRACT = AsyncWeb3.to_checksum_address(settings.USDT_CONTRACT)
-        self.USDT_ABI      = [
-            {
-                "constant": True,
-                "inputs"  : [{"name": "_owner", "type": "address"}],
-                "name"    : "balanceOf",
-                "outputs" : [{"name": "", "type": "uint256"}],
-                "type"    : "function",
-            }
-        ]
         self.usdt_contract = self.web3.eth.contract(
             address = self.USDT_CONTRACT,
             abi     = self.USDT_ABI,
@@ -98,3 +89,41 @@ class BlockchainClient:
         ).call()
 
         return balance / 1e18
+
+    @property
+    def USDT_ABI(self):
+        return [
+            {
+                "constant": False,
+                "inputs": [
+                    {"name": "_to", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
+                "name": "transfer",
+                "outputs": [{"name": "", "type": "bool"}],
+                "type": "function",
+                "stateMutability": "nonpayable",
+            },
+            {
+                "constant": True,
+                "inputs": [
+                    {"name": "_owner", "type": "address"}
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {"name": "balance", "type": "uint256"}
+                ],
+                "type": "function",
+                "stateMutability": "view",
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "name": "from", "type": "address"},
+                    {"indexed": True, "name": "to", "type": "address"},
+                    {"indexed": False, "name": "value", "type": "uint256"}
+                ],
+                "name": "Transfer",
+                "type": "event"
+            }
+        ]

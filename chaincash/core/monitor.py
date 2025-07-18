@@ -1,6 +1,7 @@
 from typing import Callable, Dict
 from chaincash.core.blockchain_client import BlockchainClient
 from chaincash.core.models import DepositEvent
+from chaincash.core.config import settings
 import asyncio
 
 class Monitor:
@@ -21,13 +22,30 @@ class Monitor:
         self.poll_interval     = poll_interval
         self.blockchain_client = blockchain_client
         self.address_map       = {k: v.lower() for k, v in address_map.items()}
+        self.USDT_ABI          = [
+            {
+                "anonymous": False,
+                "inputs"   : [
+                    {"indexed": True, "internalType": "address", "name": "from", "type": "address"},
+                    {"indexed": True, "internalType": "address", "name": "to", "type": "address"},
+                    {"indexed": False, "internalType": "uint256", "name": "value", "type": "uint256"}
+                ],
+                "name"     : "Transfer",
+                "type"     : "event"
+            }
+        ]
+        self.usdt_contract     = self.blockchain_client.web3.eth.contract(
+            address = self.blockchain_client.web3.to_checksum_address(settings.USDT_CONTRACT),
+            abi     = self.USDT_ABI
+        )
+        self.usdt_address      = self.usdt_contract.address.lower()
 
     async def start(self, callback: Callable[[DepositEvent], None]) -> None:
         """
         Start the monitoring process.
 
         Args:
-            callback: function(user_id, address, amount, tx_hash)
+            callback: function(DepositEvent)
         """
 
         print("[Monitor] Stating monitoring process...")
@@ -55,4 +73,29 @@ class Monitor:
                         tx_hash = tx_hash
                     ))
 
+                if to_address == self.usdt_address:
+                    receipt = await self.blockchain_client.web3.eth.get_transaction_receipt(tx["hash"])
+                    for log in receipt['logs']:
+                        try:
+                            event = self.usdt_contract.events.Transfer().process_log(log)
+                            to_addr = event["args"]["to"].lower()
+                            if to_addr in self.address_map.values():
+                                user_id     = next(uid for uid, addr in self.address_map.items() if addr == to_addr)
+                                amount_usdt = event["args"]["value"] / 1e18
+                                tx_hash     = tx["hash"].hex()
+
+                                print(f"[Monitor] New transaction: {user_id} - {to_addr} - {amount_usdt:.6f} USDT - {tx_hash}")
+
+                                await callback(DepositEvent(
+                                    user_id = user_id,
+                                    token   = "USDT",
+                                    amount  = amount_usdt,
+                                    tx_hash = tx_hash
+                                ))
+                        except Exception as e:
+                            print(f"[Monitor] Error processing log: {e}")
+                            continue
+                        
+
             latest_block += 1
+            await asyncio.sleep(0.1)

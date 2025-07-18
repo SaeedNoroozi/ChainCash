@@ -38,6 +38,11 @@ class Monitor:
         latest_block = await self.blockchain_client.web3.eth.block_number
         
         while True:
+            current_block = await self.blockchain_client.web3.eth.block_number
+            if latest_block + 1 > current_block:
+                await asyncio.sleep(self.poll_interval)
+                continue
+
             block = await self.blockchain_client.web3.eth.get_block(latest_block + 1, full_transactions=True)
             if block is None:
                 await asyncio.sleep(self.poll_interval)
@@ -79,7 +84,6 @@ class Monitor:
                                     tx_hash = tx_hash
                                 ))
                         except Exception as e:
-                            logger.error(f"[Monitor] Error processing log: {e}")
                             continue
                         
 

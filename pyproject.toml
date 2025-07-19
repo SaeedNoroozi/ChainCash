@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaincash"
+version = "0.1.0"
+description = "ChainCash - Crypto payments library for BEP20"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name="Saeed Noroozi", email="Noroozisaeed7@gmail.com" }
+]
+keywords = ["crypto", "payments", "bep20", "web3", "usdt", "bnb"]
+
+dependencies = [
+    "web3>=6.0.0",
+    "loguru>=0.7.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

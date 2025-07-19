@@ -1,7 +1,6 @@
 from typing import Callable, Dict
 from chaincash.core.blockchain_client import BlockchainClient
 from chaincash.core.models import DepositEvent
-from chaincash.core.config import settings
 from chaincash.utils.logger import logger
 import asyncio
 

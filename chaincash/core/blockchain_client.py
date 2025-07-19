@@ -1,8 +1,8 @@
 from web3 import AsyncWeb3
 from web3.middleware import ExtraDataToPOAMiddleware
-from chaincash.core.config import settings
 from chaincash.utils.logger import logger
 from chaincash.utils.exceptions import BlockchainConnectionError
+from chaincash.core.constants import RPC_URL, USDT_CONTRACT
 
 class BlockchainClient:
     """
@@ -25,19 +25,19 @@ class BlockchainClient:
         Initializes the BlockchainClient instance.
 
         Args:
-            rpc_url (str): The RPC URL of the blockchain. if not provided, it will use the RPC URL from the settings.
+            rpc_url (str): The RPC URL of the blockchain. if not provided, it will use the RPC URL from the constants.
 
         Raises:
             ValueError: If the RPC URL is not provided.
         """
 
-        self.rpc_url = rpc_url or settings.RPC_URL
+        self.rpc_url = rpc_url or RPC_URL
         if not self.rpc_url:
             raise ValueError("RPC URL not provided.")
         
         self.web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.rpc_url))
         self.web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        self.USDT_CONTRACT = AsyncWeb3.to_checksum_address(settings.USDT_CONTRACT)
+        self.USDT_CONTRACT = AsyncWeb3.to_checksum_address(USDT_CONTRACT)
         self.usdt_contract = self.web3.eth.contract(
             address = self.USDT_CONTRACT,
             abi     = self.USDT_ABI,

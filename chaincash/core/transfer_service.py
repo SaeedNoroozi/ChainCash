@@ -1,5 +1,4 @@
 from chaincash.core.blockchain_client import BlockchainClient
-from chaincash.core.config import settings
 from chaincash.core.models import TransferResult
 from chaincash.utils.logger import logger
 from chaincash.utils.exceptions import TransferError

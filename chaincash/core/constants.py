@@ -1,0 +1,2 @@
+RPC_URL = "https://bsc-dataseed.binance.org/"
+USDT_CONTRACT = "0x55d398326f99059fF775485246999027B3197955"
